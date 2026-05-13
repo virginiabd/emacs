@@ -49,11 +49,11 @@
   :ensure (:wait t))
 
 ;; ======================================== 
-;;; CORE SETTINGS (CONFIGURAÇÕES NATIVAS DO EMACS)
+;;; CORE SETTINGS
 
-;; FONTE
+;; fonte
 (defvar my/font "Berkeley Mono ExtraCondensed SemiLight")
-(defvar my/line-spacing 1)
+(defvar my/line-spacing 0.1)
 (defvar my/size 148)
 
 (set-face-attribute 'default nil :font my/font :height my/size)
@@ -77,6 +77,16 @@
   (winner-mode 1)
 
   :custom
+  ;; EMACS-31
+  (display-fill-column-indicator-warning nil)
+  (ibuffer-human-readable-size t)
+  (delete-pair-push-mark t)
+  (treesit-auto-install-grammar t)
+  (treesit-enabled-modes t)
+  (zone-all-frames t)
+  (zone-all-windows-in-frame t)
+  (completion-eager-update t)
+  (completion-eager-display 'auto)
   ;; ui
   (redisplay-skip-fontification-on-input t)
   (uniquify-buffer-name-style 'forward)
@@ -130,11 +140,19 @@
   (scroll-step 1)
 
   :config
+  ;; minibuffer
+  (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode)
+  (add-hook 'minibuffer-setup-hook (lambda () (setq truncate-lines t)))
+  (minibuffer-depth-indicate-mode 1)
+  (minibuffer-electric-default-mode 1)
   ;; buffers
   (defun skip-these-buffers (_window buffer _bury-or-kill)
     "Function for `switch-to-prev-buffer-skip'."
     (string-match "\\*[^*]+\\*" (buffer-name buffer)))
   (setq switch-to-prev-buffer-skip 'skip-these-buffers)
+  ;; benchmark
+  (add-hook 'emacs-startup-hook
+            (lambda () (message "Booted in %s." (emacs-init-time))))
   ;; system
   (setq custom-file (locate-user-emacs-file "custom-vars.el"))
   (add-hook 'prog-mode-hook 'display-line-numbers-mode)
@@ -150,20 +168,21 @@
       (unless (or defining-kbd-macro executing-kbd-macro)
         (funcall-interactively quit))))
   (define-key key-translation-map (kbd "ESC") (kbd "C-g"))
-  (global-unset-key (kbd "C-<wheel-down>"))
-  (global-unset-key (kbd "C-<wheel-up>"))
-  (global-unset-key (kbd "C-x C-z"))
-  (global-unset-key (kbd "C-z"))
   ;; ui
   (set-face-attribute 'tooltip nil :font my/font)
 
   :bind
-  ("C-="     . text-scale-increase)
-  ("C--"     . text-scale-decrease)
-  ("C-<tab>" . other-window))
+  ("C-=" . text-scale-increase)
+  ("C--" . text-scale-decrease)
+  ("C-<tab>" . other-window)
+  ("C-<wheel-down>" . nil)
+  ("C-<wheel-up>" . nil)
+  ("C-x C-z" . nil)
+  ("C-z" . nil))
 
 ;; ======================================== 
-;; CUSTOM FUNCTIONS
+;;; CUSTOM FUNCTIONS
+
 (defun my/jump-to-end-of-block ()
   "Jump to the end of the current block."
   (interactive)
@@ -171,7 +190,9 @@
   (forward-sexp))
 
 ;; ======================================== 
-;; COMANDOS/ATALHOS
+;;; KEYBINDINGS
+
+;; painel de atalhos 
 (use-package which-key
   :ensure nil
   :hook
@@ -186,6 +207,7 @@
   (set-face-attribute 'which-key-note-face nil :height 1.0)
   (setopt which-key-sort-order 'which-key-local-then-key-order))
 
+;; atalhos customizados
 (use-package general
   :ensure (:wait t)
   :demand t
@@ -200,7 +222,6 @@
     ;; --- navigation
     "<right>" '(evil-end-of-line :wk ("→" . "end of line"))
     "<left>"  '(evil-beginning-of-line :wk ("←" . "beg of line"))
-    "k"       '(my/kill-buffer-window :wk "kill buffer")
     "b"       '(consult-buffer :wk "search buffer")
     "y"       '(consult-yank-pop :wk "yank-pop")
     "d"       '(dired-jump :wk "file manager")
@@ -227,7 +248,6 @@
     "s"   '(:ignore t :wk "search")
     "s r" '(consult-recent-file :wk "recent files")
     "s l" '(consult-line-multi :wk "line in files")
-    "s d" '(consult-dir :wk "recent directories")
     "s g" '(consult-ripgrep :wk "ripgrep")
     "s o" '(consult-outline :wk "outline")
     "s t" '(consult-theme :wk "themes")
@@ -244,13 +264,14 @@
     "w c"       '(evil-window-delete :wk "close window")
     "w w"       '(evil-window-new :wk "new window")))
 
+;; emulação de comandos do vim
 (use-package evil
   :ensure (:wait t)
   :demand t
   :init
   (setopt evil-undo-system 'undo-redo
           evil-want-fine-undo t
-          evil-want-integration t
+          evil-weant-integration t
           evil-want-keybinding nil
           evil-vsplit-window-right t
           evil-split-window-below t
@@ -262,6 +283,7 @@
   (evil-set-initial-state 'vterm-mode 'emacs)
   (evil-mode 1))
 
+;; coleção estendida de comandos do vim
 (use-package evil-collection
   :ensure t
   :after evil
@@ -269,12 +291,14 @@
   (setopt evil-collection-mode-list '(dashboard dired ibuffer magit))
   (evil-collection-init))
 
+;; comenter linhas ou blocos com `gcc'/`gc'/`gcap', etc
 (use-package evil-commentary
   :ensure t
   :after evil
   :config
   (evil-commentary-mode))
 
+;; realça ações do vim (seleção, etc)
 (use-package evil-goggles
   :ensure t
   :custom
@@ -284,14 +308,44 @@
   (evil-goggles-mode)
   (evil-goggles-use-diff-faces))
 
-;; ======================================== 
-;;; UI (INTERFACE DE USUÁRIO)
+;; transient (magit)
+;; speedbar ou alguma outra
 
-;; PACOTE DE ÍCONES
+;; ======================================== 
+;;; UI
+
+;; pacote de ícones
 (use-package nerd-icons
   :ensure t)
 
-;; DOOM MODELINE (BARRINHA - FRESCURAS DO LUCAS)
+;; ícones no file manager
+(use-package nerd-icons-dired
+  :ensure t
+  :hook
+  (dired-mode . nerd-icons-dired-mode))
+
+;; ícones nos candidatos do minibuffer
+(use-package nerd-icons-completion
+  :ensure t
+  :after(:all nerd-icons marginalia)
+  :config
+  (nerd-icons-completion-mode)
+  (add-hook 'marginalia-mode-hook #'nerd-icons-completion-marginalia-setup))
+
+;; temas
+(use-package doric-themes
+  :ensure t
+  :demand t
+  :config
+  (setq doric-themes-to-toggle '(doric-light doric-dark))
+  (setq doric-themes-to-rotate doric-themes-collection)
+  (doric-themes-select 'doric-obsidian)
+  :bind
+  (("<f5>" . doric-themes-toggle)
+   ("C-<f5>" . doric-themes-select)
+   ("M-<f5>" . doric-themes-rotate)))
+
+;; barra de informações inferior
 (use-package doom-modeline
   :ensure t
   :custom
@@ -300,9 +354,9 @@
   (doom-modeline-buffer-encoding nil)
   (doom-modeline-major-mode-icon t)
   (doom-modeline-check-icon nil)
-  (doom-modeline-height 34)
   (nerd-icons-scale-factor 1.0)
   (doom-modeline-modal-icon t)
+  (doom-modeline-height 34)
   (doom-modeline-modal t)
   (doom-modeline-icon t)
   :config
@@ -319,29 +373,16 @@
                   (set-face-attribute face nil :weight 'normal :slant 'normal)))))
   (doom-modeline-mode 1))
 
-;; (use-package pixel-themes
-;;   :ensure nil
-;;   :load-path "~/.config/emacs/themes"
-;;   :config
-;;   (pixel-themes-set 'pixel-themes-fallenleaves))
-
-(use-package doric-themes
-  :ensure t
-  :demand t
-  :config
-  (setq doric-themes-to-toggle '(doric-light doric-dark))
-  (setq doric-themes-to-rotate doric-themes-collection)
-  (doric-themes-select 'doric-obsidian)
-  :bind
-  (("<f5>" . doric-themes-toggle)
-   ("C-<f5>" . doric-themes-select)
-   ("M-<f5>" . doric-themes-rotate)))
-
+;; colore parênteses, colchetes e chaves
 (use-package rainbow-delimiters
   :ensure t
   :hook
   (prog-mode . rainbow-delimiters-mode))
 
+;; colorful-mode
+;; ansi-color
+
+;; indicação de linhas modificadas
 (use-package line-reminder
   :ensure t
   :hook
@@ -358,11 +399,10 @@
 ;; ======================================== 
 ;;; NAVIGATION
 
-(use-package restart-emacs
-  :ensure t
-  :defer t)
+;; dired
+;; popper
 
-;; d/y/v + gs
+;; navegar para ponto específico da tela - `gs'/`SPC+/' - funciona com d/y/v 
 (use-package flash
   :ensure (:host github :repo "Prgebish/flash")
   :commands (flash-jump flash-jump-continue flash-treesitter)
@@ -376,24 +416,54 @@
     (require 'flash-evil)
     (flash-evil-setup t)))
 
+;; reiniciar emacs
+(use-package restart-emacs
+  :ensure t
+  :defer t)
+
+;; ======================================== 
+;;; LSP
+
+;; exec-path-from-shell
+;; treesit-auto
+;; markdown-ts-mode
+;; yasnippet
+;; inf-ruby
+;; lsp-bridge
+;; eldoc
+
 ;; ======================================== 
 ;;; COMPLETION
 
+;; ajustar consult
+
+;; minibuffer em forma de lista para buscas e autocomplete
 (use-package vertico
   :ensure t
   :init
   (vertico-mode)
   :custom
   (vertico-cycle nil)
-  (vertico-count 6))
+  (vertico-count 6)
+  :config
+  (advice-add #'vertico--format-candidate :around
+              (lambda (orig cand prefix suffix index _start)
+                (setq cand (funcall orig cand prefix suffix index _start))
+                (concat
+                 (if (= vertico--index index)
+                     (propertize "» " 'face '(:foreground "#768c9c" :weight bold))
+                   "  ")
+                 cand))))
 
+;; anotações nos itens do minibuffer
 (use-package marginalia
   :ensure t
   :defer t
   :after vertico
   :init
   (marginalia-mode))
-  
+
+;; fuzzy search fora de ordem
 (use-package orderless
   :ensure t
   :custom
@@ -402,31 +472,53 @@
   (completion-category-defaults nil)
   (completion-pcm-leading-wildcard t))
 
+;; comandos de busca, navegação e pré-visualização
 (use-package consult
   :ensure t
   :after vertico
   :defer t)
-
+ 
+;; inserir caminhos em prompts do minibuffer
 (use-package consult-dir
   :ensure t
-  :defer t)
+  :defer t
+  :bind
+  ("C-x c" . consult-dir))
 
 ;; ======================================== 
 ;;; EDITING
 
+;; mover linha com `M-<up>' e `M-<down>'
 (use-package move-text
   :ensure t
   :bind
   (("M-<up>"   . move-text-up)
    ("M-<down>" . move-text-down)))
 
+;; editar arquivos com sudo
+(use-package sudo-edit
+  :ensure t
+  :defer t)
+
+;; ======================================== 
+;;; WRITING & READING
+
+;; org
+;; olivetti
+;; org-modern
+;; org-tidy
+;; org-autolist
+;; pdf-tools
+
 ;; ======================================== 
 ;;; DOCS
 
+;; alternativa à ajuda/doc integrada do emacs
 (use-package helpful
   :ensure t
   :defer t)
 
+;; documentações para tecnologias diversas
 (use-package devdocs
   :ensure t
   :defer t
@@ -438,5 +530,10 @@
                       :family my/font :height my/size :weight 'normal)
   (set-face-attribute 'shr-code nil
                       :family my/font :height my/size :weight 'normal))
+
+;; ======================================== 
+;;; VERSION CONTROL
+
+;; magit
 
 ;;; init.el ends here
