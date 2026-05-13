@@ -42,21 +42,19 @@
 (add-hook 'after-init-hook #'elpaca-process-queues)
 (elpaca `(,@elpaca-order))
 
-;; Install use-package support
 (elpaca elpaca-use-package
-  ;; Enable use-package :ensure support for Elpaca.
   (elpaca-use-package-mode))
 
-(elpaca compat)
-(elpaca-wait)
+(use-package compat
+  :ensure (:wait t))
 
 ;; ======================================== 
 ;;; CORE SETTINGS (CONFIGURAÇÕES NATIVAS DO EMACS)
 
 ;; FONTE
-(defvar my/font "Berkeley Mono ExtraCondensed Retina")
+(defvar my/font "Berkeley Mono ExtraCondensed SemiLight")
 (defvar my/line-spacing 1)
-(defvar my/size 140)
+(defvar my/size 148)
 
 (set-face-attribute 'default nil :font my/font :height my/size)
 (setq-default line-spacing my/line-spacing)
@@ -220,6 +218,11 @@
     "e r" '(restart-emacs :wk "restart emacs")
     "e s" '(sudo-edit :wk "sudo edit file")
 
+    ;; --- help
+    "h"   '(:ignore t :wk "help")
+    "h h" '(helpful-at-point :wk "at point")
+    "h d" '(devdocs-lookup :wk "devdocs")
+
     ;; --- search
     "s"   '(:ignore t :wk "search")
     "s r" '(consult-recent-file :wk "recent files")
@@ -234,15 +237,12 @@
 
     ;; --- windows
     "w"         '(:ignore t :wk "windows")
-    "w <up>"    '(buf-move-up :wk ("↑" . "move up"))
-    "w <down>"  '(buf-move-down :wk ("↓" . "move down"))
-    "w <left>"  '(buf-move-left :wk ("←" . "move left"))
-    "w <right>" '(buf-move-right :wk ("→" . "move right"))
-    "w w"       '(evil-window-split :wk "horizontal split")
+    "w <right>" '(window-layout-rotate-clockwise :wk ("→" . "rotate clockwise"))
+    "w <left>"  '(window-layout-flip-leftright :wk ("←" . "flip left-right"))
+    "w <up>"    '(window-layout-flip-topdown :wk ("↑" . "flip top-down"))
     "w v"       '(evil-window-vsplit :wk "vertical split")
     "w c"       '(evil-window-delete :wk "close window")
-    "w n"       '(evil-window-new :wk "new window"))
-    )
+    "w w"       '(evil-window-new :wk "new window")))
 
 (use-package evil
   :ensure (:wait t)
@@ -300,6 +300,7 @@
   (doom-modeline-buffer-encoding nil)
   (doom-modeline-major-mode-icon t)
   (doom-modeline-check-icon nil)
+  (doom-modeline-height 34)
   (nerd-icons-scale-factor 1.0)
   (doom-modeline-modal-icon t)
   (doom-modeline-modal t)
@@ -309,8 +310,8 @@
   (setopt doom-modeline-always-show-macro-register t)
   (setopt doom-modeline-buffer-modification-icon nil)
   (custom-set-faces
-   '(mode-line ((t (:inherit default :height 120 :weight normal))))
-   '(mode-line-inactive ((t (:inherit default :height 120 :weight normal)))))
+   '(mode-line ((t (:inherit default :height 135 :weight normal))))
+   '(mode-line-inactive ((t (:inherit default :height 135 :weight normal)))))
   (add-hook 'doom-modeline-mode-hook
             (lambda ()
               (dolist (face (face-list))
@@ -318,12 +319,23 @@
                   (set-face-attribute face nil :weight 'normal :slant 'normal)))))
   (doom-modeline-mode 1))
 
-(use-package pixel-themes
-  :ensure nil
-  :load-path "~/.config/emacs/themes"
+;; (use-package pixel-themes
+;;   :ensure nil
+;;   :load-path "~/.config/emacs/themes"
+;;   :config
+;;   (pixel-themes-set 'pixel-themes-fallenleaves))
+
+(use-package doric-themes
+  :ensure t
+  :demand t
   :config
-  (add-to-list 'custom-theme-load-path "~/.config/emacs/themes")
-  (pixel-themes-set 'pixel-themes-fallenleaves))
+  (setq doric-themes-to-toggle '(doric-light doric-dark))
+  (setq doric-themes-to-rotate doric-themes-collection)
+  (doric-themes-select 'doric-obsidian)
+  :bind
+  (("<f5>" . doric-themes-toggle)
+   ("C-<f5>" . doric-themes-select)
+   ("M-<f5>" . doric-themes-rotate)))
 
 (use-package rainbow-delimiters
   :ensure t
@@ -363,10 +375,6 @@
   (with-eval-after-load 'evil
     (require 'flash-evil)
     (flash-evil-setup t)))
-
-(use-package buffer-move
-  :ensure t
-  :defer t)
 
 ;; ======================================== 
 ;;; COMPLETION
@@ -411,5 +419,24 @@
   :bind
   (("M-<up>"   . move-text-up)
    ("M-<down>" . move-text-down)))
+
+;; ======================================== 
+;;; DOCS
+
+(use-package helpful
+  :ensure t
+  :defer t)
+
+(use-package devdocs
+  :ensure t
+  :defer t
+  :config
+  (setopt devdocs-header-line nil))
+
+(with-eval-after-load 'shr
+  (set-face-attribute 'shr-text nil
+                      :family my/font :height my/size :weight 'normal)
+  (set-face-attribute 'shr-code nil
+                      :family my/font :height my/size :weight 'normal))
 
 ;;; init.el ends here
