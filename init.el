@@ -262,7 +262,13 @@
     "w <up>"    '(window-layout-flip-topdown :wk ("↑" . "flip top-down"))
     "w v"       '(evil-window-vsplit :wk "vertical split")
     "w c"       '(evil-window-delete :wk "close window")
-    "w w"       '(evil-window-new :wk "new window")))
+    "w w"       '(evil-window-new :wk "new window"))
+
+  (general-def
+    :states '(normal insert visual)
+    "M-y"   'consult-yank-pop
+    "C-,"   'popper-toggle
+    "<f12>" 'ghostel))
 
 ;; emulação de comandos do vim
 (use-package evil
@@ -271,7 +277,7 @@
   :init
   (setopt evil-undo-system 'undo-redo
           evil-want-fine-undo t
-          evil-weant-integration t
+          evil-want-integration t
           evil-want-keybinding nil
           evil-vsplit-window-right t
           evil-split-window-below t
@@ -399,7 +405,25 @@
 ;; ======================================== 
 ;;; NAVIGATION
 
-;; dired
+;; gerenciador de arquivos
+(use-package dired
+  :ensure nil
+  :hook
+  (dired-mode . dired-hide-details-mode)
+  (dired-mode . dired-omit-mode)
+  (dired-mode . hl-line-mode)
+  :custom
+  (dired-listing-switches "-lah --almost-all --group-directories-first --sort=extension")
+  (dired-hide-details-hide-absolute-location t) ; EMACS-31
+  (dired-dwim-target t)
+  (dired-omit-files "^\\.")
+  (dired-kill-when-opening-new-dired-buffer t)
+  (dired-recursive-deletes 'top)
+  (dired-recursive-copies 'always)
+  (dired-free-space nil)
+  :bind
+  (:map dired-mode-map ("C-," . dired-omit-mode)))
+
 ;; popper
 
 ;; navegar para ponto específico da tela - `gs'/`SPC+/' - funciona com d/y/v 
@@ -503,12 +527,58 @@
 ;; ======================================== 
 ;;; WRITING & READING
 
-;; org
+(use-package org
+  :ensure nil
+  :hook
+  ((org-mode . visual-line-mode)
+   (org-mode . org-indent-mode)
+   (org-mode . (lambda () (auto-fill-mode 0))))
+  :custom
+  (org-catch-invisible-edits 'show-and-error)
+  (org-insert-heading-respect-content t)
+  (org-cycle-hide-drawer-startup t)
+  (org-hide-emphasis-markers t)
+  (org-return-follows-link t)
+  (org-hide-leading-stars t)
+  (org-auto-align-tags nil)
+  (org-special-ctrl-a/e t)
+  (org-tags-column 0)
+  (org-ellipsis " ∷")
+  :config
+  (setopt evil-auto-indent nil)
+  (set-face-attribute 'org-ellipsis nil :underline nil))
+
+(use-package olivetti
+  :ensure t
+  :hook
+  (org-mode . olivetti-mode))
+
+(use-package org-modern
+  :ensure t
+  :after org
+  :hook
+  (org-mode . org-modern-mode)
+  :custom
+  (org-modern-star 'replace)
+  (org-modern-replace-stars '("◉" "○" "◈" "◇" "•"))
+  (org-modern-checkbox '((?X . "☑") (?\s . "☐")))
+  (org-modern-list '((?- . "›") (?+ . "»") (?* . "⋙"))))
 ;; olivetti
 ;; org-modern
 ;; org-tidy
 ;; org-autolist
 ;; pdf-tools
+
+;; ======================================== 
+;;; TERMINAL
+
+(use-package ghostel
+  :ensure t)
+
+(use-package evil-ghostel
+  :ensure t
+  :after (ghostel evil)
+  :hook (ghostel-mode . evil-ghostel-mode))
 
 ;; ======================================== 
 ;;; DOCS
