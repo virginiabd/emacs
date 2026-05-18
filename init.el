@@ -91,7 +91,7 @@
   (redisplay-skip-fontification-on-input t)
   (uniquify-buffer-name-style 'forward)
   (display-line-numbers-type 'relative)
-  ;; (display-line-numbers-width-start t)
+  (display-line-numbers-width-start t)
   (warning-minimum-level :emergency)
   (display-line-numbers-width 4)
   (initial-major-mode 'org-mode)
@@ -345,7 +345,7 @@
   :config
   (setq doric-themes-to-toggle '(doric-light doric-dark))
   (setq doric-themes-to-rotate doric-themes-collection)
-  (doric-themes-select 'doric-obsidian)
+  (doric-themes-select 'doric-mermaid)
   :bind
   (("<f5>" . doric-themes-toggle)
    ("C-<f5>" . doric-themes-select)
@@ -424,7 +424,24 @@
   :bind
   (:map dired-mode-map ("C-," . dired-omit-mode)))
 
-;; popper
+(use-package popper
+  :ensure t
+  :defer t
+  :init
+  (setopt popper-window-height 15)
+  (setopt popper-reference-buffers
+          '("\\*Async Shell Command\\*"
+            "^\\*ghostel.*\\*$"
+            "\\*eldoc\\*"
+            "Output\\*$"
+            compilation-mode
+            devdocs-mode
+            helpful-mode
+            ghostel-mode
+            dired-mode
+            help-mode))
+  (setopt popper-mode-line "")
+  (popper-mode +1))
 
 ;; navegar para ponto específico da tela - `gs'/`SPC+/' - funciona com d/y/v 
 (use-package flash
@@ -448,11 +465,55 @@
 ;; ======================================== 
 ;;; LSP
 
-;; exec-path-from-shell
-;; treesit-auto
-;; markdown-ts-mode
-;; yasnippet
-;; inf-ruby
+;; garante que o Emacs enxergue o path do sistema
+(use-package exec-path-from-shell
+  :ensure t
+  :demand t
+  :config
+  (exec-path-from-shell-initialize))
+
+;; analisador sintático (instala a gramática das linguagens automaticamente)
+(use-package treesit-auto
+  :ensure t
+  :after emacs
+  :custom
+  (treesit-auto-install 'prompt)
+  :config
+  (treesit-auto-add-to-auto-mode-alist 'all)
+  (global-treesit-auto-mode t))
+
+(use-package markdown-ts-mode
+  :ensure nil
+  :defer t)
+
+;; dependência do lsp-bridge
+(use-package yasnippet
+  :ensure t
+  :defer t)
+
+(use-package inf-ruby
+  :ensure t
+  :hook
+  (ruby-ts-mode . inf-ruby-minor-mode)
+  :config
+  (when (executable-find "pry")
+    (add-to-list 'inf-ruby-implementations '("pry" . "pry"))
+    (setq inf-ruby-default-implementation "pry")))
+
+(use-package lsp-bridge
+  :ensure '(lsp-bridge :type git :host github :repo "manateelazycat/lsp-bridge"
+            :files (:defaults "*.el" "*.py" "acm" "core" "langserver" "multiserver" "resources")
+            :build (:not compile))
+  :custom
+  (lsp-bridge-enable-diagnostics t)
+  (lsp-bridge-enable-hover-diagnostic t)
+  (lsp-bridge-ruby-lsp-server "ruby-lsp")
+  :config
+  (setopt lsp-bridge-default-mode-hooks
+        '(ruby-mode-hook
+          ruby-ts-mode-hook))
+  (global-lsp-bridge-mode))
+
 ;; lsp-bridge
 ;; eldoc
 
@@ -527,6 +588,7 @@
 ;; ======================================== 
 ;;; WRITING & READING
 
+;; org-mode
 (use-package org
   :ensure nil
   :hook
@@ -538,7 +600,7 @@
   (org-insert-heading-respect-content t)
   (org-cycle-hide-drawer-startup t)
   (org-hide-emphasis-markers t)
-  (org-return-follows-link t)
+  (org-return-follows-link nil)
   (org-hide-leading-stars t)
   (org-auto-align-tags nil)
   (org-special-ctrl-a/e t)
@@ -548,11 +610,15 @@
   (setopt evil-auto-indent nil)
   (set-face-attribute 'org-ellipsis nil :underline nil))
 
+;; centraliza o conteúdo no buffer
 (use-package olivetti
   :ensure t
   :hook
-  (org-mode . olivetti-mode))
+  (org-mode . olivetti-mode)
+  :config
+  (olivetti-body-width 80))
 
+;; deixa bonitinho
 (use-package org-modern
   :ensure t
   :after org
@@ -563,10 +629,30 @@
   (org-modern-replace-stars '("◉" "○" "◈" "◇" "•"))
   (org-modern-checkbox '((?X . "☑") (?\s . "☐")))
   (org-modern-list '((?- . "›") (?+ . "»") (?* . "⋙"))))
-;; olivetti
-;; org-modern
-;; org-tidy
-;; org-autolist
+
+;; oculta os marcadores de negrito/itálico etc
+(use-package org-appear
+  :ensure (:host github :repo "awth13/org-appear")
+  :hook
+  (org-mode . org-appear-mode)
+  :custom
+  (org-appear-autoemphasis t))
+
+;; grifar e anotar
+(use-package org-remark
+  :ensure t
+  :init
+  (org-remark-global-tracking-mode +1)
+  :custom
+  (org-remark-notes-file-name "~/.config/emacs/org/annotations.org")
+  :config
+  (org-remark-create "blue"
+    '(:background "#1f3a5f" :foreground "#a0b9ba")
+    '(CATEGORY "important"))
+  (org-remark-create "text-red"
+    '(:foreground "#aa0033")
+    '(CATEGORY "important")))
+
 ;; pdf-tools
 
 ;; ======================================== 
