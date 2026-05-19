@@ -174,7 +174,7 @@
   :bind
   ("C-=" . text-scale-increase)
   ("C--" . text-scale-decrease)
-  ("C-<tab>" . other-window)
+  ("C-;" . other-window)
   ("C-<wheel-down>" . nil)
   ("C-<wheel-up>" . nil)
   ("C-x C-z" . nil)
@@ -264,10 +264,20 @@
     "w c"       '(evil-window-delete :wk "close window")
     "w w"       '(evil-window-new :wk "new window"))
 
+  (my/keys
+    :keymaps '(ruby-mode-map ruby-ts-mode-map)
+    "r"   '(:ignore t :wk "ruby")
+    "i"   '(inf-ruby :wk "open repl")
+    "r r" '(ruby-send-buffer :wk "send buffer")
+    "r g" '(ruby-send-buffer-and-go :wk "send buffer and go")
+    "r s" '(ruby-send-region :wk "send region")
+    "r l" '(ruby-send-line :wk "send line"))
+  
   (general-def
     :states '(normal insert visual)
     "M-y"   'consult-yank-pop
     "C-,"   'popper-toggle
+    "C-."   'popper-cycle
     "<f12>" 'ghostel))
 
 ;; emulação de comandos do vim
@@ -435,6 +445,7 @@
             "\\*eldoc\\*"
             "Output\\*$"
             compilation-mode
+            inf-ruby-mode
             devdocs-mode
             helpful-mode
             ghostel-mode
@@ -500,21 +511,33 @@
     (add-to-list 'inf-ruby-implementations '("pry" . "pry"))
     (setq inf-ruby-default-implementation "pry")))
 
+;; instala servidores lsp para qualquer linguagem
+(use-package mason
+  :ensure t
+  :config
+  (mason-setup))
+
+;; cliente lsp: conecta a linguagem com o servidor correto 
 (use-package lsp-bridge
   :ensure '(lsp-bridge :type git :host github :repo "manateelazycat/lsp-bridge"
             :files (:defaults "*.el" "*.py" "acm" "core" "langserver" "multiserver" "resources")
             :build (:not compile))
   :custom
-  (lsp-bridge-enable-diagnostics t)
-  (lsp-bridge-enable-hover-diagnostic t)
   (lsp-bridge-ruby-lsp-server "ruby-lsp")
+  (lsp-bridge-enable-document-highlight t)
+  (lsp-bridge-enable-auto-format-code t)
+  (lsp-bridge-enable-hover-diagnostic t)
+  (lsp-bridge-enable-diagnostics t)
+  (lsp-bridge-enable-org-babel t)
   :config
   (setopt lsp-bridge-default-mode-hooks
-        '(ruby-mode-hook
-          ruby-ts-mode-hook))
+          '(emacs-lisp-mode-hook
+            ruby-ts-mode-hook
+            bash-ts-mode-hook
+            ruby-mode-hook
+            org-mode-hook))
   (global-lsp-bridge-mode))
 
-;; lsp-bridge
 ;; eldoc
 
 ;; ======================================== 
@@ -568,7 +591,7 @@
   :ensure t
   :defer t
   :bind
-  ("C-x c" . consult-dir))
+  ("C-c c" . consult-dir))
 
 ;; ======================================== 
 ;;; EDITING
@@ -663,8 +686,7 @@
 
 (use-package evil-ghostel
   :ensure t
-  :after (ghostel evil)
-  :hook (ghostel-mode . evil-ghostel-mode))
+  :after ghostel)
 
 ;; ======================================== 
 ;;; DOCS
