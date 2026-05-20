@@ -52,12 +52,11 @@
 ;;; CORE SETTINGS
 
 ;; fonte
-(defvar my/font "Berkeley Mono ExtraCondensed SemiLight")
-(defvar my/line-spacing 0.1)
+(defvar my/font "Berkeley Mono ExtraCondensed Regular")
 (defvar my/size 148)
 
 (set-face-attribute 'default nil :font my/font :height my/size)
-(setq-default line-spacing my/line-spacing)
+(setq-default line-spacing 0.1)
 
 (use-package emacs
   :ensure nil
@@ -77,24 +76,16 @@
   (winner-mode 1)
 
   :custom
-  ;; EMACS-31
-  (display-fill-column-indicator-warning nil)
-  (ibuffer-human-readable-size t)
-  (delete-pair-push-mark t)
-  (treesit-auto-install-grammar t)
-  (treesit-enabled-modes t)
-  (zone-all-frames t)
-  (zone-all-windows-in-frame t)
-  (completion-eager-update t)
-  (completion-eager-display 'auto)
   ;; ui
+  (display-fill-column-indicator-warning nil)
   (redisplay-skip-fontification-on-input t)
   (uniquify-buffer-name-style 'forward)
   (display-line-numbers-type 'relative)
-  (display-line-numbers-width-start t)
   (warning-minimum-level :emergency)
+  (ibuffer-human-readable-size t)
   (display-line-numbers-width 4)
   (initial-major-mode 'org-mode)
+  (zone-all-windows-in-frame t)
   (initial-scratch-message "")
   (ring-bell-function 'ignore)
   (split-width-threshold 100)
@@ -104,7 +95,9 @@
   (echo-keystrokes 0.1)
   (use-short-answers t)
   (use-dialog-box nil)
+  (zone-all-frames t)
   (truncate-lines t)
+  (line-spacing 1)
   ;; minibuffer
   (minibuffer-prompt-properties
    '(read-only t cursor-intangible t face minibuffer-prompt))
@@ -114,11 +107,16 @@
   (enable-recursive-minibuffers t)
   (lazy-highlight-initial-delay 0)
   (resize-mini-windows 'grow-only)
+  (completion-eager-display 'auto)
+  (completion-eager-update t)
   (history-length 25)
   ;; editing
+  (treesit-auto-install-grammar t)
   (kill-do-not-save-duplicates t)
   (sentence-end-double-space nil)
   (tab-always-indent 'complete)
+  (delete-pair-push-mark t)
+  (treesit-enabled-modes t)
   (indent-tabs-mode nil)
   (tab-width 2)
   ;; files
@@ -138,8 +136,12 @@
   (scroll-conservatively 101)
   (scroll-margin 10)
   (scroll-step 1)
-
+  
   :config
+  ;; ui
+  (set-face-attribute 'default nil :family my/font :height my/size)
+  (set-face-attribute 'minibuffer-nonselected nil :background)
+  (set-face-attribute 'tooltip nil :family my/font)
   ;; minibuffer
   (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode)
   (add-hook 'minibuffer-setup-hook (lambda () (setq truncate-lines t)))
