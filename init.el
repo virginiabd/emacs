@@ -170,15 +170,13 @@
       (unless (or defining-kbd-macro executing-kbd-macro)
         (funcall-interactively quit))))
   (define-key key-translation-map (kbd "ESC") (kbd "C-g"))
-  ;; ui
-  (set-face-attribute 'tooltip nil :font my/font)
 
   :bind
   ("C-=" . text-scale-increase)
   ("C--" . text-scale-decrease)
-  ("C-;" . other-window)
   ("C-<wheel-down>" . nil)
   ("C-<wheel-up>" . nil)
+  ("C-;" . other-window)
   ("C-x C-z" . nil)
   ("C-z" . nil))
 
@@ -521,7 +519,11 @@
   :config
   (when (executable-find "pry")
     (add-to-list 'inf-ruby-implementations '("pry" . "pry"))
-    (setq inf-ruby-default-implementation "pry")))
+    (setq inf-ruby-default-implementation "pry"))
+  (add-hook 'inf-ruby-mode-hook
+            (lambda ()
+              (set-process-query-on-exit-flag
+               (get-buffer-process (current-buffer)) nil))))
 
 ;; instala servidores lsp para qualquer linguagem
 (use-package mason
@@ -681,12 +683,9 @@
   :custom
   (org-remark-notes-file-name "~/.config/emacs/org/annotations.org")
   :config
-  (org-remark-create "blue"
-    '(:background "#1f3a5f" :foreground "#a0b9ba")
-    '(CATEGORY "important"))
   (org-remark-create "text-red"
     '(:foreground "#aa0033")
-    '(CATEGORY "important")))
+    '(CATEGORY "text-color")))
 
 ;; pdf-tools
 
@@ -698,7 +697,8 @@
 
 (use-package evil-ghostel
   :ensure t
-  :after ghostel)
+  :after (ghostel evil)
+  :hook (ghostel-mode . evil-ghostel-mode))
 
 ;; ======================================== 
 ;;; DOCS
