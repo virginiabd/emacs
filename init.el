@@ -724,6 +724,8 @@
 ;; ======================================== 
 ;;; VERSION CONTROL
 
-;; magit
+(use-package magit
+  :ensure t
+  :defer t)
 
 ;;; init.el ends here
