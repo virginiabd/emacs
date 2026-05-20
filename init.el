@@ -191,6 +191,15 @@
   (beginning-of-defun)
   (forward-sexp))
 
+(defun my/kill-buffer-window ()
+  "Kill the current buffer and close its window."
+  (interactive)
+  (let ((buffer (current-buffer)))
+    (when (and (> (count-windows) 1)
+               (not (one-window-p)))
+      (delete-window))
+    (kill-buffer buffer)))
+
 ;; ======================================== 
 ;;; KEYBINDINGS
 
@@ -224,6 +233,7 @@
     ;; --- navigation
     "<right>" '(evil-end-of-line :wk ("→" . "end of line"))
     "<left>"  '(evil-beginning-of-line :wk ("←" . "beg of line"))
+    "k"       '(my/kill-buffer-window :wk "kill buffer")
     "b"       '(consult-buffer :wk "search buffer")
     "y"       '(consult-yank-pop :wk "yank-pop")
     "d"       '(dired-jump :wk "file manager")
