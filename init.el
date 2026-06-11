@@ -571,7 +571,6 @@
    "m" '(mc/mark-all-in-region      :wk "mark matches in region"))
   
   (my/search
-    "d" '(consult-fd          :wk "search file recursively")
     "r" '(consult-recent-file :wk "search recent files")
     "b" '(consult-bookmark    :wk "search bookmarks")
     "t" '(consult-outline     :wk "search section")
@@ -580,6 +579,7 @@
 
   (my/file
     "r" '(rename-visited-file :wk "rename file")
+    "d" '(consult-fd          :wk "find file recursively")
     "f" '(find-file           :wk "find file")
     "s" '(save-buffer         :wk "save"))
 
@@ -606,7 +606,7 @@
   
   (my/tools
     "m" '(magit-status   :wk "magit")
-    "i" '(ibuffer        :wk "buffers menu")
+    "b" '(ibuffer        :wk "buffers menu")
     "t" '(ghostel        :wk "terminal")
     "d" '(devdocs-lookup :wk "devdocs")))
 
