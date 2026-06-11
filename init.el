@@ -139,7 +139,6 @@
   (file-name-shadow-mode 1)
   (electric-indent-mode 1)
   (electric-pair-mode 1)
-  (column-number-mode 1)
 
   ;; hooks
   (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode)
@@ -186,13 +185,12 @@
                      "show diff between the buffer and its file"))
 
   :bind
-  ("C-p"       . yank)
-  ("RET"       . newline-and-indent)
+  ("M-d"       . dired-jump)
+  ("M-<right>" . end-of-line)
+  ("M-<left>"  . my/beginning-of-line)
   ("C-_"       . text-scale-decrease)
   ("C-+"       . text-scale-increase)
-  ("M-<left>"  . my/beginning-of-line)
-  ("M-<right>" . end-of-line)
-  ("M-d"       . dired-jump))
+  ("RET"       . newline-and-indent))
 
 ;; ===============================================================
 ;;; CUSTOM FUNCTIONS
@@ -231,7 +229,7 @@
 
 (defun my/beginning-of-line ()
   "Go to first non-whitespace char, or column 0 if already there."
-  (interactive)
+  (interactive "^")
   (let ((origin (point)))
     (back-to-indentation)
     (when (= origin (point))
@@ -356,9 +354,15 @@
   (my/delete-thing 'defun))
 
 (defun my/delete-line ()
-  "Delete line at point."
+  "Delete line at point, or active region if one exists."
   (interactive)
-  (my/delete-thing 'line))
+  (if (use-region-p)
+      (progn
+        (pulse-momentary-highlight-region (region-beginning) (region-end))
+        (sit-for 0.15)
+        (kill-region (region-beginning) (region-end))
+        (deactivate-mark))
+    (my/delete-thing 'line)))
 
 (defun my/delete-in-brackets ()
   "Delete text inside brackets."
@@ -503,20 +507,24 @@
   
   (my/keys
     "C-<backspace>" 'my/backward-delete
-    "M-j"      'flash-jump
-    "M-<down>" 'move-text-down
-    "M-<up>  " 'move-text-up
-    "C-<tab>"  'other-window
-    "<f1>"     'scratch-buffer
-    "<f2>"     'wdired-change-to-wdired-mode
-    "<f5>"     'my/select-theme
-    "<f6>"     'my/rotate-theme
-    "C-k"      'my/kill-buffer-window
-    "C-o"      'my/open-line-below
-    "C-="      'er/expand-region
-    "C-b"      'consult-buffer
-    "C-,"      'popper-toggle
-    "C-<"      'popper-cycle)
+    "M-<down>"  'move-text-down
+    "M-<up>"    'move-text-up
+    "M-j"       'flash-jump
+    "M-k"       'kill-line
+    "M-u"       'upcase-dwim
+    "M-l"       'downcase-dwim
+    "M-c"       'capitalize-dwim
+    "<f1>"      'scratch-buffer
+    "<f5>"      'my/select-theme
+    "<f6>"      'my/rotate-theme
+    "C-<tab>"   'other-window
+    "C-k"       'my/kill-buffer-window
+    "C-o"       'my/open-line-below
+    "C-="       'er/expand-region
+    "C-b"       'consult-buffer
+    "C-,"       'popper-toggle
+    "C-<"       'popper-cycle
+    "C-p"       'yank)
 
   (my/C-c
     "d" '(duplicate-line :wk "duplicate line"))
@@ -526,9 +534,12 @@
    "t d" '(org-hide-drawers-toggle :wk "toggle drawers"))
 
   (my/dired
+    "RET"      'my/dired-find-file
+    "<f2>"     'wdired-change-to-wdired-mode
+    "M-f"      'dired-create-empty-file
+    "M-d"      'dired-create-directory
     "M-<left>" 'dired-up-directory
-    "M-."      'dired-omit-mode
-    "RET"      'my/dired-find-file)
+    "M-."      'dired-omit-mode)
 
   (my/copy
     "w" '(my/copy-symbol          :wk "copy symbol")
@@ -552,8 +563,7 @@
   
   (my/replace
     "r" '(replace-string       :wk "replace string")
-    "q" '(query-replace        :wk "query replace")
-    "m" '(flush-lines          :wk "remove matching lines"))
+    "q" '(query-replace        :wk "query replace"))
 
   (my/cursors
    "." '(mc/mark-next-like-this     :wk "add cursor next")
@@ -564,6 +574,7 @@
     "d" '(consult-fd          :wk "search file recursively")
     "r" '(consult-recent-file :wk "search recent files")
     "b" '(consult-bookmark    :wk "search bookmarks")
+    "t" '(consult-outline     :wk "search section")
     "s" '(consult-line        :wk "search line")
     "g" '(consult-ripgrep     :wk "ripgrep"))
 
@@ -595,7 +606,7 @@
   
   (my/tools
     "m" '(magit-status   :wk "magit")
-    "c" '(cheat-sh       :wk "cheat sheet")
+    "i" '(ibuffer        :wk "buffers menu")
     "t" '(ghostel        :wk "terminal")
     "d" '(devdocs-lookup :wk "devdocs")))
 
@@ -606,16 +617,21 @@
   :ensure nil
   :custom
   (display-buffer-alist
-   '(("\\`magit:"
+   '(((derived-mode . magit-mode)
       (display-buffer-in-side-window)
-      (window-height . 0.4)
       (side . bottom)
-      (slot . 0))
+      (slot . 0)
+      (window-height . 0.5))
      ((derived-mode . dired-mode)
       (display-buffer-in-side-window)
-      (window-height . 0.4)
       (side . bottom)
-      (slot . 0)))))
+      (slot . 0)
+      (window-height . 0.4))
+     ("\\*Ibuffer\\*"
+      (display-buffer-in-side-window)
+      (side . bottom)
+      (slot . 0)
+      (window-height . 0.4)))))
 
 (use-package popper
   :ensure t
@@ -623,12 +639,11 @@
   :init
   (popper-mode +1)
   :custom
-  (popper-window-height 16)
+  (popper-window-height 10)
   (popper-mode-line "")
   (popper-reference-buffers
    '("\\*eldoc\\*"
      "\\*marginal notes\\*"
-     "\\*cheat.sh*\\*$"
      "^\\*ghostel.*\\*"
      "atalhos\\.org$"
      compilation-mode
@@ -647,6 +662,11 @@
   :ensure t
   :hook
   (dired-mode . nerd-icons-dired-mode))
+
+(use-package nerd-icons-ibuffer
+  :ensure t
+  :hook
+  (ibuffer-mode . nerd-icons-ibuffer-mode))
 
 (use-package nerd-icons-completion
   :ensure t
@@ -698,16 +718,14 @@
 (defun my/select-theme ()
   "Interactively select and load a theme."
   (interactive)
-  ;; Emacs 30 completing-read aceita uma lista de símbolos diretamente
   (let ((choice (completing-read "Theme: " (my/theme-list) nil t)))
-    (when (org-string-nw-p choice) ; Garante que não é uma string vazia
+    (when (org-string-nw-p choice)
       (my/load-theme (intern choice)))))
 
 (defun my/rotate-theme ()
   "Rotate to the next theme in the filtered list."
   (interactive)
   (let* ((filtered (my/theme-list))
-         ;; Se não achar o tema atual, começa do início (index 0)
          (curr-idx (or (cl-position (car custom-enabled-themes) filtered) -1))
          (next-idx (mod (1+ curr-idx) (length filtered))))
     (my/load-theme (nth next-idx filtered))))
@@ -741,13 +759,19 @@
 (use-package doom-modeline
   :ensure t
   :custom
-  (doom-modeline-window-width-limit 0)
+  (doom-modeline-buffer-file-name-style 'buffer-name)
+  (doom-modeline-project-detection 'project)
+  (mode-line-right-align-edge 'right-fringe)
+  (doom-modeline-window-width-limit 60)
   (doom-modeline-total-line-number t)
   (doom-modeline-buffer-encoding nil)
   (doom-modeline-major-mode-icon t)
   (doom-modeline-check-icon nil)
+  (doom-modeline-persp-icon nil)
+  (doom-modeline-persp-name nil)
   (doom-modeline-modal-icon t)
   (doom-modeline-height 25)
+  (doom-modeline-time nil)
   (doom-modeline-modal t)
   (doom-modeline-icon t)
   :config
@@ -762,7 +786,11 @@
               (dolist (face (face-list))
                 (when (string-prefix-p "doom-modeline" (symbol-name face))
                   (set-face-attribute face nil :weight 'normal :slant 'normal)))))
-  (doom-modeline-mode 1))
+  (doom-modeline-mode 1)
+  ;; fix doom-modeline leaking mode-line-inactive background into active window.
+  (advice-add 'doom-modeline-display-text :override
+            (lambda (text)
+              (string-replace "%" "%%" text))))
 
 (use-package colorful-mode
   :ensure t
@@ -794,6 +822,11 @@
                       :foreground (face-attribute 'line-number-current-line :foreground))
   (set-face-attribute 'line-reminder-saved-sign-face nil
                       :foreground (face-attribute 'default :background)))
+
+(use-package whitespace
+  :ensure nil
+  :defer t
+  :hook (before-save . whitespace-cleanup))
 
 ;; ===============================================================
 ;;; NAVIGATION
@@ -965,7 +998,9 @@
   (corfu-auto nil)
   (corfu-count 7)
   :config
-  (global-corfu-mode))
+  (global-corfu-mode)
+  (advice-add #'lsp-completion-at-point
+              :around #'cape-wrap-noninterruptible))
 
 (use-package cape
   :ensure t
@@ -1048,18 +1083,18 @@
   (setopt consult-buffer-sources '(consult-source-buffer))
   (setopt consult-buffer-filter
           (append consult-buffer-filter
-                  '("\\*Async Shell Command\\*" "\\*eldoc\\*" "Output\\*$"
-                    "annotations.org" "\\*Messages\\*" "\\*lsp-bridge.*\\*"
-                    "\\*helpful.*\\*" "\\*ghostel.*\\*")))
+                  '("\\*Async Shell Command\\*" "Output\\*$" "\\*Help\\*" "\\*Messages\\*"
+                    "\\*eldoc\\*" "\\*helpful.*\\*" "annotations.org" "\\*Ibuffer\\*"
+                    "\\*Warnings\\*" "\\*ghostel.*\\*" "atalhos.org")))
   ;; prevent dired buffer from surfacing in consult-buffer when hidden by popper.
-  (defun my/consult-buffer-filter-modes (buffers)
-    (cl-remove-if
-     (lambda (buf)
-       (let ((buffer (if (stringp buf) (get-buffer buf) (cdr buf))))
-         (when buffer
-           (memq (buffer-local-value 'major-mode buffer) '(dired-mode)))))
-     buffers))
-  (advice-add #'consult--buffer-query :filter-return #'my/consult-buffer-filter-modes))
+  (advice-add
+   #'consult--buffer-query :filter-return
+   (lambda (buffers)
+     (seq-remove
+      (lambda (buf)
+        (with-current-buffer (if (consp buf) (cdr buf) buf)
+          (derived-mode-p 'dired-mode)))
+      buffers))))
 
 ;; ==============================================================
 ;;; EDITING
@@ -1076,10 +1111,6 @@
   (mc/list-file (locate-user-emacs-file "mc-lists.el"))
   :config
   (set-face-attribute 'mc/cursor-bar-face nil :underline t))
-
-(use-package sudo-edit
-  :ensure t
-  :defer t)
 
 ;; ===============================================================
 ;;; WRITING & READING
@@ -1180,49 +1211,17 @@
   :defer t
   :bind
   ("C-c M-g" . nil)
+  :preface
+  (defun my/magit-kill-buffers ()
+    "Restore window configuration and kill all Magit buffers."
+    (interactive)
+    (let ((buffers (magit-mode-get-buffers)))
+      (magit-restore-window-configuration)
+      (mapc #'kill-buffer buffers)))
+  :bind
+  (:map magit-status-mode-map ("q" . my/magit-kill-buffers))
   :config
-  (keymap-set transient-map "<escape>" 'transient-quit-one))
-
-;; ===============================================================
-;;; TOOLS
-
-(defun cheat-sh ()
-  "Query cheat.sh and display the result in a dedicated buffer."
-  (interactive)
-  (let* ((input (read-string "cheat.sh: "))
-         (parts (split-string input " " t))
-         (path  (if (cdr parts)
-                    (format "%s/%s"
-                            (car parts)
-                            (url-hexify-string (string-join (cdr parts) " ")))
-                  (url-hexify-string (car parts))))
-         (buffer (get-buffer-create "*cheat.sh*"))
-         (cmd    (format "curl -s 'cheat.sh/%s'" path)))
-    (with-current-buffer buffer
-      (read-only-mode -1)
-      (erase-buffer)
-      (insert (concat "cheat.sh: " input "\n"))
-      (read-only-mode 1))
-    (switch-to-buffer buffer)
-    (cheat-sh--fetch cmd buffer)))
-
-(defun cheat-sh--fetch (cmd buffer &optional)
-  "Execute CMD as a shell command and stream output into BUFFER."
-  (make-process
-   :name "cheat-sh-fetch"
-   :buffer (generate-new-buffer "*cheat-sh-temp*")
-   :command (list "sh" "-c" cmd)
-   :sentinel
-   (lambda (proc _event)
-     (when (eq (process-status proc) 'exit)
-       (let ((output (with-current-buffer (process-buffer proc)
-                       (buffer-string))))
-         (kill-buffer (process-buffer proc))
-         (with-current-buffer buffer
-           (read-only-mode -1)
-           (insert output)
-           (ansi-color-apply-on-region (point-min) (point-max))
-           (goto-char (point-min))
-           (read-only-mode 1)))))))
+  (magit-process-apply-ansi-colors t)
+  (keymap-set transient-map "<escape>" #'transient-quit-one))
 
 ;;; init.el ends here
