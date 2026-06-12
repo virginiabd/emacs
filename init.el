@@ -513,6 +513,7 @@
     "M-k"       'kill-line
     "M-u"       'upcase-dwim
     "M-l"       'downcase-dwim
+    "M-p"       'duplicate-dwim
     "M-c"       'capitalize-dwim
     "<f1>"      'scratch-buffer
     "<f5>"      'my/select-theme
@@ -526,8 +527,9 @@
     "C-<"       'popper-cycle
     "C-p"       'yank)
 
-  (my/C-c
-    "d" '(duplicate-line :wk "duplicate line"))
+  ;; (my/C-c
+  ;;   "a" '( :wk "")
+  ;;   "b" '( :wk ""))
 
   (my/C-c ;; org
    :keymaps 'org-mode-map
