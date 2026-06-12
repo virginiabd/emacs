@@ -1,37 +1,58 @@
 #+TITLE: Atalhos
 
 * Globais
-+ ~C-tab~ alternar janela
 + ~<f1>~  abrir scratch buffer
-+ ~<f2>~  editar nomes de arquivos no dired
-+ ~C-p~   colar
-+ ~C-b~   trocar de buffer
-+ ~C-k~   fechar buffer e janela
-+ ~C-o~   criar nova linha abaixo
-+ ~C-=~   expandir seleção
-+ ~C-,~   abrir/fechar popup
-+ ~C-<~   ciclar popups
++ ~<f5>~  trocar tema por listagem
++ ~<f6>~  trocar/percorrer temas
 + ~C-_~   diminuir tamanho da fonte
 + ~C-+~   aumentar tamanho da fonte
-  
-* ~M-~ (alt)
-+ ~M-j~ pular para localização (flash)
-+ ~M ↑~ mover linha para cima
+
+* Janelas
++ ~C-tab~ alternar janela
++ ~C-k~   fechar buffer e janela
++ ~C-b~   trocar de buffer
++ ~C-,~   abrir/fechar popup
++ ~C-<~   ciclar popups
+
+* Edição de texto (sem prefixos)
++ ~C-p~ colar
++ ~M-w~ copiar seleção
++ ~C-w~ recortar seleção
++ ~M-y~ histórico de cópias
++ ~C-=~ expandir seleção (selecionar palavra, depois frase, etc) ~repetível~
++ ~M-k~ apagar do cursor até fim da linha
++ ~C-o~ criar nova linha abaixo
 + ~M ↓~ mover linha para baixo
++ ~M ↑~ mover linha para cima
++ ~M-u~ converter palavra/seleção para MAIÚSCULAS ~repetível~
++ ~M-l~ converter palavra/seleção para minúsculas ~repetível~
++ ~M-c~ converter palavra/seleção para Capitalizada ~repetível~
++ ~M-t~ inverter palavra com a próxima
++ ~M-p~ duplicar linha ~repetível~
+
+* Movimentos
++ ~M-j~ digitar início de palavra e pular para o local
 + ~M ←~ ir para o início da linha
 + ~M →~ ir para o fim da linha
-+ ~M-y~ histórico de cópias
-+ ~M-u~ converter palavra para MAIÚSCULAS
-+ ~M-l~ converter palavra para minúsculas
-+ ~M-c~ converter palavra para Capitalizada
-+ ~M-t~ inverter palavra com a próxima
 + ~M-a~ início da sentença
 + ~M-e~ fim da sentença
 + ~M-<~ início do arquivo
 + ~M->~ fim do arquivo
-  
-* C-c · Geral :repetível:
-+ ~C-c d~ duplicar linha
+
+* ~M-d~ · Dired (comandos abaixo funcionam após entrar no Dired)
++ ~q~    fechar dired
++ ~RET~  entrar em pasta
++ ~M-←~  voltar para pasta anterior
++ ~M-d~  criar nova pasta
++ ~M-f~  criar novo arquivo
++ ~M-.~  exibir/ocultar arquivos ocultos
++ ~<f2>~ editar nomes de arquivos/pastas
++ ~D~    deletar arquivo
++ ~C~    copiar arquivo
++ ~R~    mover arquivo passando o caminho da pasta
++ ~m~    marcar arquivos para executar ações (deletar, mover, etc) em todos
++ ~u~    desmarcar um arquivo marcado
++ ~U~    desmarcar todos os arquivos marcados
 
 * C-d · Deletar :repetível:
 + ~C-d d~ deletar linha
@@ -51,6 +72,7 @@
 
 * C-s · Buscar
 + ~C-s s~ buscar linha no buffer atual
++ ~C-s t~ buscar por seção/título
 + ~C-s g~ buscar com ripgrep
 + ~C-s r~ arquivos recentes
 + ~C-s b~ bookmarks
@@ -58,7 +80,6 @@
 * C-r · Substituir
 + ~C-r r~ substituir string
 + ~C-r q~ substituir com confirmação
-+ ~C-r m~ remover linhas que batem com padrão
 
 * C-f · Arquivo
 + ~C-f f~ buscar e abrir arquivo
@@ -79,8 +100,8 @@
 
 * C-t · Ferramentas
 + ~C-t t~ abrir terminal
-+ ~C-t c~ consultar cheat.sh (dicas de comandos do linux ou linguagens)
 + ~C-t d~ consultar devdocs
++ ~C-t b~ abrir menu de buffers
 + ~C-t m~ abrir magit
 
 * C-l · LSP/ruby
